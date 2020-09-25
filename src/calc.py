@@ -106,7 +106,7 @@ class CalcVisual:
 class CalcModel:
     def __init__(self, controller):
         self.controller=controller
-        self.accum=0.0
+        self.accum=None
         self.display=0.0
         self.op=None
         self.calc={
@@ -121,14 +121,16 @@ class CalcModel:
         self.notify()
 
     def reset(self):
-        self.accum=0.0
+        self.accum=None
         self.display=0.0
+        self.op = None
         self.notify()
 
     def equal(self):
         try:
-            self.display = self.calc[self.op](self.accum, self.display) if self.op else self.display
-            self.accum=self.display
+            self.accum = self.calc[self.op](self.accum, self.display) if self.op else self.display
+            self.op = None
+            self.display=0.0
             self.notify()
         except ZeroDivisionError:
             self.err('Can\'t divide by 0.')
@@ -136,25 +138,39 @@ class CalcModel:
             self.err('PANIC.')
 
     def add(self):
-        self.accum=self.display
+        if self.op == '+':
+            self.accum=self.calc["+"](self.accum, self.display)
+        if self.accum == None:
+            self.accum=self.display
         self.op="+"
         self.display=0.0
         self.notify()
 
     def substract(self):
-        self.accum=self.display
+        if self.op == '-':
+            self.accum=self.calc["-"](self.accum, self.display)
+        if self.accum == None:
+            self.accum=self.display
+        # self.accum=self.display
         self.op="-"
         self.display=0.0
         self.notify()
 
     def divide(self):
-        self.accum=self.display
+        if self.op == '/':
+            self.accum=self.calc["/"](self.accum, self.display)
+        if self.accum == None:
+            self.accum=self.display
+        # self.accum=self.display
         self.op="/"
         self.display=0.0
         self.notify()
 
     def multiplicate(self):
-        self.accum=self.display
+        if self.op == '*':
+            self.accum=self.calc["*"](self.accum, self.display)
+        if self.accum == None:
+            self.accum=self.display
         self.op="*"
         self.display=0.0
         self.notify()
@@ -190,7 +206,7 @@ class CalcController:
         self.visual.display.set(
             int(d) if d.is_integer() else d
         )
-        self.visual.operator.set(f'ANS:{self.model.accum} OP: {self.model.op if self.model.op else ""}')
+        self.visual.operator.set(f'ANS:{self.model.accum if self.model.accum else "-"} OP: {self.model.op if self.model.op else ""}')
 
     def write(self, number):
         vd=self.visual.display.get()
