@@ -1,0 +1,23 @@
+version: '2'
+services:
+  poc:
+    image: smpiano/calc
+    build: .
+    environment: [DISPLAY]
+    entrypoint: python ./src/calc.py
+    user: "1000"
+    group_add: [1000]
+    volumes:
+      - "./src:/opt/project/src"
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
+
+  bash:
+    image: smpiano/calc
+    build: .
+    environment: [DISPLAY]
+    entrypoint: /bin/bash
+    user: "1000"
+    group_add: [1000]
+    volumes:
+      - "./src:/opt/project/src"
+      - "/tmp/.X11-unix:/tmp/.X11-unix"
