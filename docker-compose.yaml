@@ -8,6 +8,7 @@ services:
     user: "1000"
     group_add: [1000]
     volumes:
+      - "./assets:/opt/project/assets"
       - "./src:/opt/project/src"
       - "/tmp/.X11-unix:/tmp/.X11-unix"
 

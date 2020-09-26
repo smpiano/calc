@@ -1,4 +1,5 @@
 import tkinter as tk
+import time
 
 
 class CalcVisual:
@@ -90,12 +91,12 @@ class CalcVisual:
             }
         }
         for name,val in self.operations.items():
-            button = tk.Button(
+            self.operations[name]['button'] = tk.Button(
                 gButtons,
                 text=val['text'],
                 fg=val.get('fg',"red"),
                 command=val['command'])
-            button.grid(
+            self.operations[name]['button'].grid(
                 row=val['row'],
                 column=val.get('column',None),
                 columnspan=val.get('columnspan',1),
@@ -190,6 +191,40 @@ class CalcController:
         img = tk.PhotoImage(file=icon)
         self.root.iconphoto(True,img)
         self.root.title(title)
+        # self.root.bind("<Key>", self.key_events)
+        self.root.bind("<KeyPress>", self.key_events_pressed)
+        self.root.bind("<KeyRelease>", self.key_events_released)
+        self.keys = {
+            "KP_Divide":{ "command":self.div, "button":"div" },
+            "KP_Multiply":{ "command":self.mul, "button":"mult" },
+            "KP_Subtract":{ "command":self.sub, "button":"sub" },
+            "KP_Add":{ "command":self.add, "button":"add" },
+            "KP_Enter":{ "command":self.equal, "button":"equal" },
+            "BackSpace":{ "command":self.clear, "button":"clear" },
+            "KP_Decimal":{ "command":lambda x='.':self.write(x), "button":"comma" }
+        }
+        for x in range(0,10):
+            self.keys[f'KP_{x}']={}
+            self.keys[f'KP_{x}']['command']=lambda y=x:self.write(str(y))
+        self.keypad_mapping = {
+            "KP_Insert":"KP_0",
+            "KP_End":"KP_1",
+            "KP_Down":"KP_2",
+            "KP_Next":"KP_3",
+            "KP_Left":"KP_4",
+            "KP_Begin":"KP_5",
+            "KP_Right":"KP_6",
+            "KP_Home":"KP_7",
+            "KP_Up":"KP_8",
+            "KP_Prior":"KP_9",
+            "KP_Delete":"KP_Decimal",
+            "KP_Divide":"KP_Divide",
+            "KP_Multiply":"KP_Multiply",
+            "KP_Subtract":"KP_Subtract",
+            "KP_Add":"KP_Add",
+            "KP_Enter":"KP_Enter",
+            "BackSpace":"BackSpace"
+        }
         self.clear()
         self.root.mainloop()
 
@@ -240,5 +275,27 @@ class CalcController:
     def mul(self):
         self.model.multiplicate()
 
+    def key_events_pressed(self, event):
+        if event.keysym in self.keys.keys():
+            key_obj = self.keys[event.keysym]
+            button = self.visual.buttons[int(event.char)] if event.char in [str(x) for x in range(0,10)] else self.visual.operations[key_obj['button']]['button']
+            button['relief'] = tk.SUNKEN
+            key_obj['command']()
+        return False
+
+    def key_events_released(self, event):
+        if event.keysym in self.keypad_mapping.keys():
+            keypad_map = self.keypad_mapping[event.keysym]
+            key_obj = self.keys[keypad_map]
+            button = self.visual.buttons[int(keypad_map[3])] if 'button' not in key_obj else self.visual.operations[key_obj['button']]['button']
+            button['relief'] = tk.RAISED
+        return False
+
+    def key_events(self, event):
+        print(f'event: {event}')
+        if event.keysym in self.keys.keys():
+            self.keys[event.keysym]['command']()
+
+
 # Main App
-controller = CalcController("Mi Calculadora", './src/calc.png')
+controller = CalcController("Mi Calculadora", './assets/calc.png')
