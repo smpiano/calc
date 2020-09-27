@@ -1,5 +1,4 @@
 import tkinter as tk
-import time
 
 
 class CalcVisual:
@@ -57,7 +56,7 @@ class CalcVisual:
             },
             "clear":{
                 "row":6,
-                "columnspan":4,
+                "columnspan":2,
                 "text":"C",
                 "command":self.controller.clear
             },
@@ -88,6 +87,20 @@ class CalcVisual:
                 "text":"x",
                 "fg":"blue",
                 "command":self.controller.mul
+            },
+            "avg":{
+                "row":6,
+                "column":3,
+                "text":"%",
+                "fg":"blue",
+                "command":self.controller.perc
+            },
+            "sign":{
+                "row":6,
+                "column":2,
+                "text":"(-)",
+                "fg":"blue",
+                "command":lambda x='sign':self.controller.write(x)
             }
         }
         for name,val in self.operations.items():
@@ -114,7 +127,8 @@ class CalcModel:
             "+":lambda x,y:x+y,
             "-":lambda x,y:x-y,
             "/":lambda x,y:x/y,
-            "*":lambda x,y:x*y
+            "*":lambda x,y:x*y,
+            "%":lambda x,y:x*y/100
         }
 
     def update(self, num):
@@ -140,7 +154,7 @@ class CalcModel:
 
     def add(self):
         if self.op == '+':
-            self.accum=self.calc["+"](self.accum, self.display)
+            self.accum=self.calc[self.op](self.accum, self.display)
         if self.accum == None:
             self.accum=self.display
         self.op="+"
@@ -149,30 +163,37 @@ class CalcModel:
 
     def substract(self):
         if self.op == '-':
-            self.accum=self.calc["-"](self.accum, self.display)
+            self.accum=self.calc[self.op](self.accum, self.display)
         if self.accum == None:
             self.accum=self.display
-        # self.accum=self.display
         self.op="-"
         self.display=0.0
         self.notify()
 
     def divide(self):
         if self.op == '/':
-            self.accum=self.calc["/"](self.accum, self.display)
+            self.accum=self.calc[self.op](self.accum, self.display)
         if self.accum == None:
             self.accum=self.display
-        # self.accum=self.display
         self.op="/"
         self.display=0.0
         self.notify()
 
     def multiplicate(self):
         if self.op == '*':
-            self.accum=self.calc["*"](self.accum, self.display)
+            self.accum=self.calc[self.op](self.accum, self.display)
         if self.accum == None:
             self.accum=self.display
         self.op="*"
+        self.display=0.0
+        self.notify()
+
+    def percentage(self):
+        if self.op == '%':
+            self.accum=self.calc[self.op](self.accum, self.display)
+        if self.accum == None:
+            self.accum=self.display
+        self.op="%"
         self.display=0.0
         self.notify()
 
@@ -191,7 +212,6 @@ class CalcController:
         img = tk.PhotoImage(file=icon)
         self.root.iconphoto(True,img)
         self.root.title(title)
-        # self.root.bind("<Key>", self.key_events)
         self.root.bind("<KeyPress>", self.key_events_pressed)
         self.root.bind("<KeyRelease>", self.key_events_released)
         self.keys = {
@@ -249,6 +269,10 @@ class CalcController:
             if not '.' in vd:
                 now=vd + number
                 self.visual.display.set(now)
+        elif number == 'sign':
+            now = -1*float(vd)
+            self.visual.display.set(str(now))
+            self.model.update(now)
         else:
             try:
                 now=float(vd + number)
@@ -275,6 +299,9 @@ class CalcController:
     def mul(self):
         self.model.multiplicate()
 
+    def perc(self):
+        self.model.percentage()
+
     def key_events_pressed(self, event):
         if event.keysym in self.keys.keys():
             key_obj = self.keys[event.keysym]
@@ -290,11 +317,6 @@ class CalcController:
             button = self.visual.buttons[int(keypad_map[3])] if 'button' not in key_obj else self.visual.operations[key_obj['button']]['button']
             button['relief'] = tk.RAISED
         return False
-
-    def key_events(self, event):
-        print(f'event: {event}')
-        if event.keysym in self.keys.keys():
-            self.keys[event.keysym]['command']()
 
 
 # Main App
